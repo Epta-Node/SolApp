@@ -272,6 +272,13 @@ class ApiClient {
     });
   }
 
+  async sendPrivateTip(chatId: string, amount: number) {
+    return this.request(`/chats/${chatId}/private-tip`, {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    });
+  }
+
   async markChatAsRead(chatId: string) {
     return this.request(`/chats/${chatId}/read`, { method: 'PUT' });
   }
@@ -460,9 +467,21 @@ class ApiClient {
   }
 
   async resetPassword(data: { token: string; password: string }) {
+    // token field carries the 6-digit code; email is passed separately via params
+    // The backend expects { email, code, password } — callers must pass email in token
+    // For the reset-password screen, token = code and we need email from navigation params.
+    // This method is called with { token: code, password } from the screen.
+    // We re-map here: the screen passes email via useLocalSearchParams separately.
     return this.request('/auth/password/reset', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  }
+
+  async resetPasswordWithCode(email: string, code: string, password: string) {
+    return this.request('/auth/password/reset', {
+      method: 'POST',
+      body: JSON.stringify({ email, code, password }),
     });
   }
 }
